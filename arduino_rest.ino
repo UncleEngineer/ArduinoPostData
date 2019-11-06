@@ -38,6 +38,11 @@ Response: {
  */
 #include <ArduinoHttpClient.h>
 #include <WiFiNINA.h>
+#include <Adafruit_Sensor.h>
+#include <DHT.h>
+#define DHTPIN 2
+#define DHTTYPE DHT22   // DHT 22  (AM2302)
+
 //#include "arduino_secrets.h"
 
 ///////please enter your sensitive data in the Secret tab/arduino_secrets.h
@@ -46,14 +51,19 @@ Response: {
 char ssid[] = "Uncle 3";
 char pass[] = "212224236";
 
-const char serverName[] = "httpbin.org";  // server name
+const char serverName[] = "www.python-uncle-exam.com";  // server name
 int port = 80;
 
 WiFiClient wifi;
 HttpClient client = HttpClient(wifi, serverName, port);
 int status = WL_IDLE_STATUS;
 
+DHT dht = DHT(DHTPIN, DHTTYPE);
+
 void setup() {
+
+  dht.begin();
+  
   Serial.begin(115200);
   while ( status != WL_CONNECTED) {
     Serial.print("Attempting to connect to Network named: ");
@@ -76,9 +86,13 @@ void setup() {
 void loop() {
   Serial.println("making POST request");
   String contentType = "application/x-www-form-urlencoded";
-  String postData = "sensor_name=TESTSENSOR&sensor_temp=50.5";
+  float reading = dht.readTemperature();
+  delay(5000);
+  String postData = "sensor_name=TEST&sensor_temp="+ String(reading);
+  Serial.print("DATA: ");
+  Serial.println(postData);
 
-  client.post("/post", contentType, postData);
+  client.post("/api/create", contentType, postData);
 
   // read the status code and body of the response
   int statusCode = client.responseStatusCode();
@@ -88,6 +102,6 @@ void loop() {
   Serial.print("Response: ");
   Serial.println(response);
 
-  Serial.println("Wait 30 seconds");
-  delay(3000);
+  Serial.println("Wait 10 seconds");
+  
 }
